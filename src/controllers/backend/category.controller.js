@@ -33,11 +33,6 @@ exports.create = async (request, response) => {
 };
 
 exports.view = async (request, response) => {
-  // this is used to select the data to call from the database to show/view
-  const condition = {
-    deleted_at: null,
-  };
-
   let limit = 10;
   let skip = 0;
   let page = 1;
@@ -56,9 +51,24 @@ exports.view = async (request, response) => {
     }
   }
 
+  const andCondition = [{ deleted_at: null }];
+
+  if (request.body != undefined) {
+    if (request.body.name != undefined && request.body.name != "") {
+      const name = new RegExp(request.body.name, "i");
+      andCondition.push({ name: name });
+    }
+
+    if (request.body.order != undefined && request.body.order != "") {
+      andCondition.push({ order: request.body.order });
+    }
+  }
+
+  let filter = { $and: andCondition };
+
   try {
-    const totalRecords = await CategoryModel.find(condition).countDocuments();
-    const result = await CategoryModel.find(condition)
+    const totalRecords = await CategoryModel.find(filter).countDocuments();
+    const result = await CategoryModel.find(filter)
       .select("name image order status")
       .sort({ _id: "desc" })
       .limit(limit)

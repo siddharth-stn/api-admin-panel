@@ -18,7 +18,8 @@ Think of this like a recipe — you don't need to memorize it. Just follow along
 8. [Connect Routes to server.js](#8-connect-routes-to-serverjs)
 9. [Adding a Second Module — Category](#9-adding-a-second-module--category)
 10. [Test the API](#10-test-the-api)
-11. [Quick Reference — Common Gotchas](#11-quick-reference--common-gotchas)
+11. [How Dynamic Filtering Works — Category View](#11-how-dynamic-filtering-works--category-view)
+12. [Quick Reference — Common Gotchas](#12-quick-reference--common-gotchas)
 
 ---
 
@@ -1125,13 +1126,9 @@ exports.create = async (request, response) => {
 };
 
 // ============================================================
-// VIEW — Same as Default, but selects "image" too
+// VIEW — With dynamic filtering using $and and RegExp
 // ============================================================
 exports.view = async (request, response) => {
-  const condition = {
-    deleted_at: null,
-  };
-
   let limit = 10;
   let skip = 0;
   let page = 1;
@@ -1150,9 +1147,66 @@ exports.view = async (request, response) => {
     }
   }
 
+  // ---------- Building the filter dynamically ----------
+  // Unlike the Default controller (which uses a simple condition object),
+  // Category uses MongoDB's $and operator to build filters dynamically.
+  //
+  // WHY $and instead of a simple object?
+  //   A simple object like { deleted_at: null, name: "Sofa" } works for exact matches.
+  //   But when you need RegExp values, conditional fields, or complex queries,
+  //   $and gives you more flexibility — you push conditions into an array
+  //   only when they exist, so the query adapts to what the user searched for.
+
+  const andCondition = [{ deleted_at: null }];
+  // Start with the base condition: only show non-deleted records.
+  // This condition is ALWAYS present, regardless of filters.
+
+  if (request.body != undefined) {
+    if (request.body.name != undefined && request.body.name != "") {
+      const name = new RegExp(request.body.name, "i");
+      andCondition.push({ name: name });
+    }
+    // If the user typed a name in the search box:
+    //   1. new RegExp(request.body.name, "i") creates a case-insensitive regex.
+    //      Example: if user types "elec", this becomes /elec/i
+    //      This matches "Electronics", "Electrical", "ELECTRIC", etc.
+    //      The "i" flag means case-Insensitive.
+    //   2. We push it into the andCondition array.
+    //
+    // WHY RegExp for name but not for order?
+    //   Names are text — users expect partial, flexible matching.
+    //   Typing "elec" should find "Electronics" (partial match).
+    //   Order is a number — you either want order 5 or you don't (exact match).
+
+    if (request.body.order != undefined && request.body.order != "") {
+      andCondition.push({ order: request.body.order });
+    }
+    // Order is an exact match — no regex needed for numbers.
+  }
+
+  let filter = { $and: andCondition };
+  // Combine all conditions with $and.
+  // MongoDB's $and means: ALL conditions must be true for a record to match.
+
+  // ---------- How the filter looks for different scenarios ----------
+  //
+  // | User input       | andCondition array                                         | Final MongoDB query                                              |
+  // |------------------|------------------------------------------------------------|------------------------------------------------------------------|
+  // | No filters       | [{ deleted_at: null }]                                     | { $and: [{ deleted_at: null }] }                                 |
+  // | Name only        | [{ deleted_at: null }, { name: /elec/i }]                  | { $and: [{ deleted_at: null }, { name: /elec/i }] }             |
+  // | Order only       | [{ deleted_at: null }, { order: 5 }]                       | { $and: [{ deleted_at: null }, { order: 5 }] }                  |
+  // | Name + Order     | [{ deleted_at: null }, { name: /elec/i }, { order: 5 }]    | { $and: [{ deleted_at: null }, { name: /elec/i }, { order: 5 }] }|
+  //
+  // In every case, deleted_at: null is always present — soft-deleted records never show up.
+  // Additional filters are only added when the user provides them.
+
   try {
-    const totalRecords = await CategoryModel.find(condition).countDocuments();
-    const result = await CategoryModel.find(condition)
+    const totalRecords = await CategoryModel.find(filter).countDocuments();
+    // Count ALL matching records (ignoring limit/skip).
+    // IMPORTANT: Uses the same filter, so the count reflects filtered results too.
+    // If 50 categories exist but only 3 match "elec", totalRecords = 3.
+
+    const result = await CategoryModel.find(filter)
       .select("name image order status")
       // Added "image" to the select — Category has an image field.
       .sort({ _id: "desc" })
@@ -1321,6 +1375,7 @@ exports.destroy = async (request, response) => {
 | --- | --- | --- |
 | File handling | No | `request.file` check in create and update |
 | View select | `"name order status"` | `"name image order status"` |
+| View filtering | Simple `condition` object with exact `name` match | `$and` array with `RegExp` for case-insensitive name search + exact `order` match |
 | Error handling | Only checks `error.errors` | Also falls back to `error.message` for non-validation errors |
 | Everything else | Same | Same |
 
@@ -1474,6 +1529,9 @@ require("./src/routes/backend/category.routes")(app);  // ← new line
 | Create a category | POST | `http://localhost:8000/api/backend/categories/create` | `name: "Sofa"`, `image: [file]` |
 | View all categories | POST | `http://localhost:8000/api/backend/categories/view` | (no body needed) |
 | View with pagination | POST | `http://localhost:8000/api/backend/categories/view` | `page: 2`, `limit: 5` |
+| Filter by name | POST | `http://localhost:8000/api/backend/categories/view` | `name: "elec"` (case-insensitive, partial match) |
+| Filter by order | POST | `http://localhost:8000/api/backend/categories/view` | `order: 5` (exact match) |
+| Filter by both | POST | `http://localhost:8000/api/backend/categories/view` | `name: "elec"`, `order: 5` |
 | Get one category | POST | `http://localhost:8000/api/backend/categories/details/ID_HERE` | (no body needed) |
 | Update a category | PUT | `http://localhost:8000/api/backend/categories/update/ID_HERE` | `name: "Chair"`, `image: [file]` |
 | Toggle status | PUT | `http://localhost:8000/api/backend/categories/toggle-status` | `id: "ID_HERE"` |
@@ -1527,7 +1585,123 @@ Open **Postman** (or any API testing tool) and try these:
 
 ---
 
-## 11. Quick Reference — Common Gotchas
+## 11. How Dynamic Filtering Works — Category View
+
+The Category `view` endpoint supports **dynamic filtering** — the MongoDB query changes based on what the user searches for. This is more advanced than the Default controller's simple condition object.
+
+### The frontend sends these parameters
+
+The React frontend (ViewCategory.jsx) sends a POST request with:
+
+```js
+axios.post("http://localhost:8000/api/backend/categories/view", {
+  page: currentPage,    // which page of results
+  name: filterData.name, // category name to search (from text input)
+  order: filterData.order // category order number (from number input)
+});
+```
+
+### Step-by-step: how the filter is built
+
+**Step 1 — Start with the base condition (always applied)**
+
+```js
+const andCondition = [{ deleted_at: null }];
+```
+
+This ensures soft-deleted categories never show up. This condition is **always present**, regardless of whether the user applied any filters.
+
+**Step 2 — Add the name filter (optional, case-insensitive)**
+
+```js
+if (request.body.name != undefined && request.body.name != "") {
+  const name = new RegExp(request.body.name, "i");
+  andCondition.push({ name: name });
+}
+```
+
+If the user typed a name in the search box:
+1. `new RegExp(request.body.name, "i")` creates a **case-insensitive regular expression**.
+   - `request.body.name` → the search pattern (e.g., `"elec"`)
+   - `"i"` → the flag meaning **case-insensitive**
+   - Result: `/elec/i`
+2. This regex is pushed into the `andCondition` array.
+3. In MongoDB, passing a RegExp as a field value works like the `$regex` operator — it does a **partial, case-insensitive match**.
+
+So if the user searches for `"elec"`, it matches `"Electronics"`, `"Electrical"`, `"ELECTRIC"`, `"eLeCTRiC"`, etc.
+
+**Step 3 — Add the order filter (optional, exact match)**
+
+```js
+if (request.body.order != undefined && request.body.order != "") {
+  andCondition.push({ order: request.body.order });
+}
+```
+
+Order is a number — users expect an exact match (order 5 means order 5, not 50 or 15).
+
+**Step 4 — Combine all conditions with `$and`**
+
+```js
+let filter = { $and: andCondition };
+```
+
+MongoDB's `$and` means: **ALL conditions in the array must be true** for a record to match.
+
+### The final query for every scenario
+
+| User input | `andCondition` array | Final MongoDB query |
+|---|---|---|
+| No filters | `[{ deleted_at: null }]` | `{ $and: [{ deleted_at: null }] }` |
+| Name only (e.g., "elec") | `[{ deleted_at: null }, { name: /elec/i }]` | `{ $and: [{ deleted_at: null }, { name: /elec/i }] }` |
+| Order only (e.g., 5) | `[{ deleted_at: null }, { order: 5 }]` | `{ $and: [{ deleted_at: null }, { order: 5 }] }` |
+| Name + Order | `[{ deleted_at: null }, { name: /elec/i }, { order: 5 }]` | `{ $and: [{ deleted_at: null }, { name: /elec/i }, { order: 5 }] }` |
+
+In every case, `deleted_at: null` is always present — soft-deleted records never show up. Additional filters are only added when the user provides them.
+
+**Step 5 — Query execution (same filter for count and results)**
+
+```js
+const totalRecords = await CategoryModel.find(filter).countDocuments();
+const result = await CategoryModel.find(filter)
+  .select("name image order status")
+  .sort({ _id: "desc" })
+  .limit(limit)
+  .skip(skip);
+```
+
+The **same `filter`** is used for both the total count (for pagination) and the actual results. This is important because:
+- If 50 categories exist but only 3 match the filter `"elec"`, `totalRecords` = 3 (not 50).
+- Pagination stays accurate — `total_pages` is based on the filtered count, not the total count.
+
+### Why `$and` array instead of a simple condition object?
+
+The Default controller uses a simple object:
+```js
+const condition = { deleted_at: null, name: request.body.name };
+```
+
+This works for exact matches, but has limitations:
+- You can't conditionally add/remove fields easily.
+- You can't use RegExp values cleanly alongside other conditions.
+
+The `$and` array approach lets you **push conditions only when they exist**:
+```js
+const andCondition = [{ deleted_at: null }];  // always present
+if (hasName) andCondition.push({ name: /pattern/i });  // only if user searched
+if (hasOrder) andCondition.push({ order: 5 });          // only if user filtered
+```
+
+This pattern scales well — when you add more filters later (status, date range, etc.), you just push more conditions into the array.
+
+### Why RegExp for name but not for order?
+
+- **Name** is text — users expect partial, flexible matching. Typing `"elec"` should find `"Electronics"`.
+- **Order** is a number — you either want order 5 or you don't. Partial matching on numbers doesn't make sense.
+
+---
+
+## 12. Quick Reference — Common Gotchas
 
 Things that are easy to forget but will save you hours of debugging.
 
