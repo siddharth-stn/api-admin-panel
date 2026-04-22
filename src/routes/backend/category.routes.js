@@ -8,14 +8,16 @@ const {
   destroy,
 } = require("../../controllers/backend/category.controller.js");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/category" });
 const path = require("path");
+
+const uploadDir = path.join(process.cwd(), "uploads/category");
+const upload = multer({ dest: uploadDir });
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/category");
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);

@@ -1341,21 +1341,38 @@ const {
   destroy,
 } = require("../../controllers/backend/category.controller.js");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/category" });
-// A BASIC multer setup — just saves files to the "uploads/category" folder.
-// Files get a random name with no extension (e.g., "a1b2c3d4e5f6").
-// We use this for routes that DON'T accept files (explained below).
-
 const path = require("path");
 // Node.js built-in module for working with file paths.
-// We need it to extract the file extension from the original filename.
+// We need it for two things:
+//   1. Building absolute paths for multer (see uploadDir below).
+//   2. Extracting the file extension from the original filename.
+
+const uploadDir = path.join(process.cwd(), "uploads/category");
+// Multer v2 requires ABSOLUTE paths — relative paths like "uploads/category" will throw:
+//   "Base path '' must be an absolute path"
+//
+// process.cwd() returns the directory where you ran `npm start` — the project root.
+//   e.g., "/Users/sid/my-project"
+// path.join() combines it with "uploads/category" to get:
+//   "/Users/sid/my-project/uploads/category"
+//
+// WHY process.cwd() and not __dirname?
+//   __dirname = the folder where THIS file lives (src/routes/backend/).
+//   To reach uploads/ from there, you'd need "../../../uploads/category".
+//   That's fragile — if you ever move this file, the path breaks.
+//   process.cwd() always points to the project root, regardless of where the file lives.
+
+const upload = multer({ dest: uploadDir });
+// A BASIC multer setup — just saves files to the uploads/category folder.
+// Files get a random name with no extension (e.g., "a1b2c3d4e5f6").
+// We use this for routes that DON'T accept files (explained below).
 
 const router = express.Router();
 
 // ---------- Custom storage for better filenames ----------
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/category");
+    cb(null, uploadDir);
     // Where to save the file. "cb" = callback.
     // cb(error, destination) — null means no error.
   },
@@ -1428,7 +1445,7 @@ module.exports = (app) => {
 
 | Concept | What it does |
 | ------- | ------------ |
-| `multer({ dest: "path" })` | Basic setup — saves files with random names, no extension |
+| `multer({ dest: absolutePath })` | Basic setup — saves files with random names, no extension. **Multer v2 requires absolute paths** — use `path.join(process.cwd(), "uploads/category")` |
 | `multer({ storage })` | Custom setup — you control the filename and destination |
 | `multer.diskStorage({ destination, filename })` | Define WHERE and with WHAT NAME to save files |
 | `uploads.single("fieldname")` | Middleware: accept ONE file from this form field |
@@ -1723,6 +1740,20 @@ message: (props) => `${props.value} is already in use for ${props.path} field.`
 // You MUST use multer middleware:
 router.post("/create", uploads.single("image"), create);  // file + form fields
 router.post("/view", upload.none(), view);                 // form fields only, no file
+```
+
+**Multer v2 requires absolute paths:**
+```js
+// WRONG — multer v2 throws: "Base path '' must be an absolute path"
+const upload = multer({ dest: "uploads/category" });
+
+// CORRECT — use process.cwd() to build an absolute path from the project root
+const uploadDir = path.join(process.cwd(), "uploads/category");
+const upload = multer({ dest: uploadDir });
+
+// WHY process.cwd() and not __dirname + "../../../"?
+//   __dirname depends on where the file lives — move the file, path breaks.
+//   process.cwd() always returns the project root (where you ran npm start).
 ```
 
 **`require()` runs at startup, not on request:**
