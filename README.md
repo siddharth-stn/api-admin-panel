@@ -1605,6 +1605,8 @@ The frontend also supports **editing categories**. The AddCategory.jsx component
 - **Create mode**: Route `/category/add-category` — sends `axios.post()` to `/api/backend/categories/create`
 - **Edit mode**: Route `/category/update/:id` — fetches existing data via POST to `/api/backend/categories/details/:id`, populates the form with `defaultValue`, and sends `axios.put()` to `/api/backend/categories/update/:id`
 
+The ViewCategory.jsx page also supports **bulk actions** via checkbox selection. A select-all checkbox in the table header toggles all row checkboxes, and individual row checkboxes toggle single selections. Selected record IDs are tracked in a `selectedRecord` array. The "Delete All" and "Change Status" buttons are disabled when no rows are selected (`selectedRecord.length === 0`) — these will send the array of IDs to the `toggle-status` and `delete` endpoints (which accept `id` as a single ID or an array).
+
 ### Step-by-step: how the filter is built
 
 **Step 1 — Start with the base condition (always applied)**
