@@ -68,12 +68,12 @@ This downloads four packages and saves them in a `node_modules` folder. It also 
 
 **What does each package do?**
 
-| Package    | What it does | Simple analogy |
-| ---------- | ------------ | -------------- |
-| `express`  | A web framework. It listens for requests (like "give me all users") and sends back responses. | Like a waiter in a restaurant — takes orders and brings food. |
-| `mongoose` | Connects your app to MongoDB and lets you define rules for your data (called schemas). | Like a form builder — you define what fields exist and what's allowed. |
-| `cors`     | Allows your API to accept requests from different URLs. Without it, a React app on `localhost:3000` can't talk to your API on `localhost:8000`. | Like a security guard who checks if someone is allowed to enter. |
-| `multer`   | Handles file uploads. It processes `multipart/form-data` (the format browsers use to send files) and saves files to disk. | Like a mailroom clerk — receives packages (files), labels them, and stores them in the right room. |
+| Package    | What it does                                                                                                                                    | Simple analogy                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `express`  | A web framework. It listens for requests (like "give me all users") and sends back responses.                                                   | Like a waiter in a restaurant — takes orders and brings food.                                      |
+| `mongoose` | Connects your app to MongoDB and lets you define rules for your data (called schemas).                                                          | Like a form builder — you define what fields exist and what's allowed.                             |
+| `cors`     | Allows your API to accept requests from different URLs. Without it, a React app on `localhost:3000` can't talk to your API on `localhost:8000`. | Like a security guard who checks if someone is allowed to enter.                                   |
+| `multer`   | Handles file uploads. It processes `multipart/form-data` (the format browsers use to send files) and saves files to disk.                       | Like a mailroom clerk — receives packages (files), labels them, and stores them in the right room. |
 
 > **Note:** You do NOT need a package called `body-parser`. Express already has that ability built-in since version 4.16. Some old tutorials still install it — you can skip it.
 
@@ -82,6 +82,7 @@ This downloads four packages and saves them in a `node_modules` folder. It also 
 ## 3. Create the Entry Point — server.js
 
 This is the first file that runs when you start your project. It does 3 jobs:
+
 1. Sets up Express (the waiter)
 2. Tells Express how to understand incoming data
 3. Connects to MongoDB (the database)
@@ -191,17 +192,18 @@ mkdir -p src/{config,model,controllers/{website,backend,application},routes/{web
 
 ### What does each folder do?
 
-| Folder | Job | Analogy |
-| ------ | --- | ------- |
-| `model/` | Defines the shape of your data — fields, types, rules. | A form template — "Name must be text, age must be a number." |
-| `controllers/` | Contains the actual logic — what happens when someone hits a route. | The chef in a restaurant — receives the order and cooks the food. |
-| `routes/` | Maps URLs to controller functions — "When someone visits /create, call the create function." | The menu — lists what's available and points to the right chef. |
-| `middleware/` | Functions that run BEFORE the controller — like checking if someone is logged in. | A security check before you enter a room. |
-| `config/` | Stores settings like the database URL, API keys, etc. | A settings page. |
+| Folder         | Job                                                                                          | Analogy                                                           |
+| -------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `model/`       | Defines the shape of your data — fields, types, rules.                                       | A form template — "Name must be text, age must be a number."      |
+| `controllers/` | Contains the actual logic — what happens when someone hits a route.                          | The chef in a restaurant — receives the order and cooks the food. |
+| `routes/`      | Maps URLs to controller functions — "When someone visits /create, call the create function." | The menu — lists what's available and points to the right chef.   |
+| `middleware/`  | Functions that run BEFORE the controller — like checking if someone is logged in.            | A security check before you enter a room.                         |
+| `config/`      | Stores settings like the database URL, API keys, etc.                                        | A settings page.                                                  |
 
 ### Why 3 subfolders (website, backend, application)?
 
 Because one project can serve multiple audiences:
+
 - **website** — The public-facing site that anyone can see.
 - **backend** — The admin panel (only for admins to manage data).
 - **application** — The API endpoints that a React or mobile app talks to.
@@ -210,11 +212,11 @@ Each audience has different routes, controllers, and middleware, so we keep them
 
 ### File naming conventions
 
-| Type | Naming | Example |
-| ---- | ------ | ------- |
-| Model files | PascalCase | `Default.js`, `User.js`, `Product.js` |
+| Type             | Naming             | Example                                       |
+| ---------------- | ------------------ | --------------------------------------------- |
+| Model files      | PascalCase         | `Default.js`, `User.js`, `Product.js`         |
 | Controller files | lowercase with dot | `default.controller.js`, `user.controller.js` |
-| Route files | lowercase with dot | `default.routes.js`, `user.routes.js` |
+| Route files      | lowercase with dot | `default.routes.js`, `user.routes.js`         |
 
 ---
 
@@ -228,7 +230,6 @@ Create a file: `src/model/Default.js`
 const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
-
   // ---------- A text field with validation ----------
   name: {
     type: String,
@@ -338,17 +339,17 @@ module.exports = DefaultModel;
 
 ### All available validators at a glance
 
-| Validator    | Works on  | What it does | Example |
-| ------------ | --------- | ------------ | ------- |
-| `required`   | All types | Field cannot be empty | `required: [true, "Name is required!"]` |
-| `default`    | All types | Value used if nothing is provided | `default: true` |
-| `match`      | String    | Must match a regex pattern | `match: /^[a-z]+$/` |
-| `enum`       | String    | Must be one of the listed values | `enum: ["User", "Admin"]` |
-| `minlength`  | String    | Minimum number of characters | `minlength: [2, "Too short"]` |
-| `maxlength`  | String    | Maximum number of characters | `maxlength: [50, "Too long"]` |
-| `min`        | Number    | Minimum allowed number | `min: [1, "Too small"]` |
-| `max`        | Number    | Maximum allowed number | `max: [1000, "Too big"]` |
-| `validate`   | All types | Your own custom rule (can be async) | See example above |
+| Validator   | Works on  | What it does                        | Example                                 |
+| ----------- | --------- | ----------------------------------- | --------------------------------------- |
+| `required`  | All types | Field cannot be empty               | `required: [true, "Name is required!"]` |
+| `default`   | All types | Value used if nothing is provided   | `default: true`                         |
+| `match`     | String    | Must match a regex pattern          | `match: /^[a-z]+$/`                     |
+| `enum`      | String    | Must be one of the listed values    | `enum: ["User", "Admin"]`               |
+| `minlength` | String    | Minimum number of characters        | `minlength: [2, "Too short"]`           |
+| `maxlength` | String    | Maximum number of characters        | `maxlength: [50, "Too long"]`           |
+| `min`       | Number    | Minimum allowed number              | `min: [1, "Too small"]`                 |
+| `max`       | Number    | Maximum allowed number              | `max: [1000, "Too big"]`                |
+| `validate`  | All types | Your own custom rule (can be async) | See example above                       |
 
 ### When does the model file actually run?
 
@@ -406,7 +407,6 @@ exports.create = async (request, response) => {
     };
     return response.send(data);
     // Send the success response back to the user.
-
   } catch (error) {
     // If ANYTHING goes wrong (validation fails, database error, etc.), we end up here.
 
@@ -447,9 +447,9 @@ exports.view = async (request, response) => {
     // But in the backend (admin panel), admins should see disabled records too.
   };
 
-  let limit = 10;  // How many records per page (default: 10)
-  let skip = 0;    // How many records to skip (for pagination)
-  let page = 1;    // Current page number
+  let limit = 10; // How many records per page (default: 10)
+  let skip = 0; // How many records to skip (for pagination)
+  let page = 1; // Current page number
 
   if (request.body != undefined) {
     if (request.body.limit != undefined && request.body.limit != "") {
@@ -485,7 +485,7 @@ exports.view = async (request, response) => {
       .limit(limit)
       // Only return this many records.
       .skip(skip);
-      // Skip this many records (for pagination).
+    // Skip this many records (for pagination).
 
     if (result.length > 0) {
       const data = {
@@ -744,21 +744,22 @@ Why? Because the frontend developer (or future you) can always rely on the same 
 
 ### Key Mongoose methods
 
-| Method | What it does | Returns |
-| ------ | ------------ | ------- |
-| `new Model(data).save()` | Creates a new document and saves it | The saved document |
-| `Model.find()` | Gets ALL documents | An array (can be empty) |
-| `Model.find().select("field1 field2")` | Gets documents but only specific fields | An array with partial documents |
-| `Model.find().countDocuments()` | Counts matching documents | A number |
-| `Model.find().sort({ field: "desc" })` | Sorts results | An array (sorted) |
-| `Model.find().limit(n).skip(n)` | Pagination — limit how many, skip how many | An array (paginated) |
-| `Model.findOne(query)` | Gets ONE document matching the query | The document, or null |
-| `Model.updateOne(query, update, options)` | Updates ONE document | Update result info |
-| `Model.updateMany(query, pipeline, { updatePipeline: true })` | Updates MANY documents (pipeline = array for aggregation, requires `updatePipeline` option in Mongoose 9+) | Update result info |
+| Method                                                        | What it does                                                                                               | Returns                         |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `new Model(data).save()`                                      | Creates a new document and saves it                                                                        | The saved document              |
+| `Model.find()`                                                | Gets ALL documents                                                                                         | An array (can be empty)         |
+| `Model.find().select("field1 field2")`                        | Gets documents but only specific fields                                                                    | An array with partial documents |
+| `Model.find().countDocuments()`                               | Counts matching documents                                                                                  | A number                        |
+| `Model.find().sort({ field: "desc" })`                        | Sorts results                                                                                              | An array (sorted)               |
+| `Model.find().limit(n).skip(n)`                               | Pagination — limit how many, skip how many                                                                 | An array (paginated)            |
+| `Model.findOne(query)`                                        | Gets ONE document matching the query                                                                       | The document, or null           |
+| `Model.updateOne(query, update, options)`                     | Updates ONE document                                                                                       | Update result info              |
+| `Model.updateMany(query, pipeline, { updatePipeline: true })` | Updates MANY documents (pipeline = array for aggregation, requires `updatePipeline` option in Mongoose 9+) | Update result info              |
 
 ### The golden rule: ALWAYS use `await`
 
 Every Mongoose method that talks to the database returns a Promise. If you forget `await`:
+
 - `result` will be a Query/Promise object instead of the actual data.
 - A Query object is always truthy, so `if (result)` will ALWAYS be true.
 - Your code will "work" but give wrong results — the hardest kind of bug to find.
@@ -834,13 +835,13 @@ module.exports = (app) => {
 
 ### HTTP Methods — which one to use when
 
-| Method   | Purpose | Example |
-| -------- | ------- | ------- |
-| `GET`    | Read/fetch data (no body) | Get a list of users |
-| `POST`   | Send data / create something | Create a new user |
-| `PUT`    | Update an entire record | Update all fields of a user |
-| `PATCH`  | Update part of a record | Change only the user's name |
-| `DELETE` | Delete something | Remove a user |
+| Method   | Purpose                      | Example                     |
+| -------- | ---------------------------- | --------------------------- |
+| `GET`    | Read/fetch data (no body)    | Get a list of users         |
+| `POST`   | Send data / create something | Create a new user           |
+| `PUT`    | Update an entire record      | Update all fields of a user |
+| `PATCH`  | Update part of a record      | Change only the user's name |
+| `DELETE` | Delete something             | Remove a user               |
 
 ---
 
@@ -859,7 +860,7 @@ require("./src/routes/backend/default.routes")(app);
    - The routes file loads the controller file.
    - The controller file loads the model file.
    - The model file builds the schema and creates the Model.
-   All of this happens RIGHT NOW, at server startup.
+     All of this happens RIGHT NOW, at server startup.
 
 2. `(app)` — Calls the exported function and passes your Express app to it. This registers all the routes on your app.
 
@@ -916,6 +917,7 @@ require("./src/routes/application/auth.routes")(app);
 ## 9. Adding a Second Module — Category (with File Uploads)
 
 Now that you've built the Default module, let's add a second one — **Category**. This module introduces two new concepts:
+
 1. **File uploads** using `multer` — categories can have an image.
 2. **Improved validators** — better error messages using `match` array syntax and the `props` object.
 
@@ -927,7 +929,6 @@ Every new module follows the same 5 steps, but this one has extra sauce.
 const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
-
   // ---------- Name with IMPROVED validators ----------
   name: {
     type: String,
@@ -1059,13 +1060,13 @@ module.exports = CategoryModel;
 
 **What's different from Default?**
 
-| | Default Model | Category Model |
-| --- | --- | --- |
-| Extra fields | `type` (enum) | `image` (String) |
-| `match` format | Bare regex (generic error) | Array syntax (custom error message) |
+|                    | Default Model                | Category Model                      |
+| ------------------ | ---------------------------- | ----------------------------------- |
+| Extra fields       | `type` (enum)                | `image` (String)                    |
+| `match` format     | Bare regex (generic error)   | Array syntax (custom error message) |
 | `validate.message` | `props` accepted but ignored | `props.value` and `props.path` used |
-| `order.min` | 1 | 0 |
-| Model name | `"defaults"` | `"categories"` |
+| `order.min`        | 1                            | 0                                   |
+| Model name         | `"defaults"`                 | `"categories"`                      |
 
 ### Step 2: Create the Controller — `src/controllers/backend/category.controller.js`
 
@@ -1374,13 +1375,13 @@ exports.destroy = async (request, response) => {
 
 **What's different from Default's controller?**
 
-| | Default | Category |
-| --- | --- | --- |
-| File handling | No | `request.file` check in create and update |
-| View select | `"name order status"` | `"name image order status"` |
-| View filtering | Simple `condition` object with exact `name` match | `$and` array with `RegExp` for case-insensitive name search + exact `order` match |
-| Error handling | Only checks `error.errors` | Also falls back to `error.message` for non-validation errors |
-| Everything else | Same | Same |
+|                 | Default                                           | Category                                                                          |
+| --------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| File handling   | No                                                | `request.file` check in create and update                                         |
+| View select     | `"name order status"`                             | `"name image order status"`                                                       |
+| View filtering  | Simple `condition` object with exact `name` match | `$and` array with `RegExp` for case-insensitive name search + exact `order` match |
+| Error handling  | Only checks `error.errors`                        | Also falls back to `error.message` for non-validation errors                      |
+| Everything else | Same                                              | Same                                                                              |
 
 > **Note:** The delete route also differs — Default uses `router.put("/delete", ...)` while Category uses `router.delete("/delete", ...)`. This is a routes-level difference, covered in Step 3 below.
 
@@ -1501,17 +1502,17 @@ module.exports = (app) => {
 
 ### Multer at a glance
 
-| Concept | What it does |
-| ------- | ------------ |
-| `multer({ dest: absolutePath })` | Basic setup — saves files with random names, no extension. **Multer v2 requires absolute paths** — use `path.join(process.cwd(), "uploads/category")` |
-| `multer({ storage })` | Custom setup — you control the filename and destination |
-| `multer.diskStorage({ destination, filename })` | Define WHERE and with WHAT NAME to save files |
-| `uploads.single("fieldname")` | Middleware: accept ONE file from this form field |
-| `upload.none()` | Middleware: parse form fields only, reject any files |
-| `request.file` | The uploaded file's info (set by multer after processing) |
-| `request.file.filename` | The name multer saved the file as (e.g., "image-17130...-483726195.jpg") |
-| `request.file.originalname` | The original name from the user's computer (e.g., "my-photo.jpg") |
-| `request.file.fieldname` | The form field name (e.g., "image" — from `uploads.single("image")`) |
+| Concept                                         | What it does                                                                                                                                          |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `multer({ dest: absolutePath })`                | Basic setup — saves files with random names, no extension. **Multer v2 requires absolute paths** — use `path.join(process.cwd(), "uploads/category")` |
+| `multer({ storage })`                           | Custom setup — you control the filename and destination                                                                                               |
+| `multer.diskStorage({ destination, filename })` | Define WHERE and with WHAT NAME to save files                                                                                                         |
+| `uploads.single("fieldname")`                   | Middleware: accept ONE file from this form field                                                                                                      |
+| `upload.none()`                                 | Middleware: parse form fields only, reject any files                                                                                                  |
+| `request.file`                                  | The uploaded file's info (set by multer after processing)                                                                                             |
+| `request.file.filename`                         | The name multer saved the file as (e.g., "image-17130...-483726195.jpg")                                                                              |
+| `request.file.originalname`                     | The original name from the user's computer (e.g., "my-photo.jpg")                                                                                     |
+| `request.file.fieldname`                        | The form field name (e.g., "image" — from `uploads.single("image")`)                                                                                  |
 
 ### Step 4: Connect to server.js
 
@@ -1520,25 +1521,25 @@ Add one line to `server.js`:
 ```js
 // Backend Routes
 require("./src/routes/backend/default.routes")(app);
-require("./src/routes/backend/category.routes")(app);  // ← new line
+require("./src/routes/backend/category.routes")(app); // ← new line
 ```
 
 ### Step 5: Test Category Endpoints
 
 > **Important:** Category uses **form-data** (not raw JSON) because of file uploads. In Postman, select "Body → form-data" instead of "Body → raw → JSON".
 
-| What to test | Method | URL | Body (form-data) |
-| ------------ | ------ | --- | ----------- |
-| Create a category | POST | `http://localhost:8000/api/backend/categories/create` | `name: "Sofa"`, `image: [file]` |
-| View all categories | POST | `http://localhost:8000/api/backend/categories/view` | (no body needed) |
-| View with pagination | POST | `http://localhost:8000/api/backend/categories/view` | `page: 2`, `limit: 5` |
-| Filter by name | POST | `http://localhost:8000/api/backend/categories/view` | `name: "elec"` (case-insensitive, partial match) |
-| Filter by order | POST | `http://localhost:8000/api/backend/categories/view` | `order: 5` (exact match) |
-| Filter by both | POST | `http://localhost:8000/api/backend/categories/view` | `name: "elec"`, `order: 5` |
-| Get one category | POST | `http://localhost:8000/api/backend/categories/details/ID_HERE` | (no body needed) |
-| Update a category | PUT | `http://localhost:8000/api/backend/categories/update/ID_HERE` | `name: "Chair"`, `image: [file]` (only changed fields needed — `$set` preserves existing data) |
-| Toggle status | PUT | `http://localhost:8000/api/backend/categories/toggle-status` | `id: "ID_HERE"` or `id: ["ID1", "ID2"]` |
-| Soft delete | DELETE | `http://localhost:8000/api/backend/categories/delete` | `id: "ID_HERE"` or `id: ["ID1", "ID2"]` |
+| What to test         | Method | URL                                                            | Body (form-data)                                                                               |
+| -------------------- | ------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Create a category    | POST   | `http://localhost:8000/api/backend/categories/create`          | `name: "Sofa"`, `image: [file]`                                                                |
+| View all categories  | POST   | `http://localhost:8000/api/backend/categories/view`            | (no body needed)                                                                               |
+| View with pagination | POST   | `http://localhost:8000/api/backend/categories/view`            | `page: 2`, `limit: 5`                                                                          |
+| Filter by name       | POST   | `http://localhost:8000/api/backend/categories/view`            | `name: "elec"` (case-insensitive, partial match)                                               |
+| Filter by order      | POST   | `http://localhost:8000/api/backend/categories/view`            | `order: 5` (exact match)                                                                       |
+| Filter by both       | POST   | `http://localhost:8000/api/backend/categories/view`            | `name: "elec"`, `order: 5`                                                                     |
+| Get one category     | POST   | `http://localhost:8000/api/backend/categories/details/ID_HERE` | (no body needed)                                                                               |
+| Update a category    | PUT    | `http://localhost:8000/api/backend/categories/update/ID_HERE`  | `name: "Chair"`, `image: [file]` (only changed fields needed — `$set` preserves existing data) |
+| Toggle status        | PUT    | `http://localhost:8000/api/backend/categories/toggle-status`   | `id: "ID_HERE"` or `id: ["ID1", "ID2"]`                                                        |
+| Soft delete          | DELETE | `http://localhost:8000/api/backend/categories/delete`          | `id: "ID_HERE"` or `id: ["ID1", "ID2"]`                                                        |
 
 > In Postman, for the `image` field, change the type dropdown from "Text" to "File" — then you can select a file from your computer.
 
@@ -1554,7 +1555,264 @@ The structure never changes. What changes is the specifics — Category needed f
 
 ---
 
-## 10. Test the API
+## 10. Adding a SubCategory Module
+
+The SubCategory module demonstrates how to create a hierarchical relationship between models, where a SubCategory belongs to a parent Category. This pattern is useful for organizing data in a tree-like structure.
+
+### 10.1 Create the SubCategory Model
+
+Create a file: `src/model/subCategory.js`
+
+```js
+const mongoose = require("mongoose");
+
+const schema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Name is required!"],
+    match: [
+      /^[a-zA-Z 0-9]{2,10}$/,
+      "Name must be an Alphanumeric value of 2 to 10 characters",
+    ],
+    validate: {
+      validator: async function (v) {
+        const user = await mongoose.model("sub_categories").findOne({
+          name: v,
+          parent_category_id: this.parent_category_id,
+          deleted_at: null,
+        });
+        return !user;
+      },
+      message: (props) =>
+        `${props.value} is already in use for ${props.path} field.`,
+    },
+  },
+  image: {
+    type: String,
+    default: "",
+  },
+  parent_category_id: {
+    type: String,
+    required: [true, "Parent Category is required!"],
+    ref: "categories",
+  },
+  status: {
+    type: Boolean,
+    default: true,
+  },
+  order: {
+    type: Number,
+    default: 2,
+    min: [0, "Can't be less than zero"],
+    max: [1000, "Maximum 1000 quantity allowed"],
+  },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: null },
+  deleted_at: { type: Date, default: null },
+});
+
+const subCategoryModel = mongoose.model("sub_categories", schema);
+
+module.exports = subCategoryModel;
+```
+
+**Key Features:**
+
+- **Reference Field**: `parent_category_id` with `ref: "categories"` creates a relationship to the Category model
+- **Unique Validation**: Ensures subcategory names are unique within the same parent category
+- **Same Pattern**: Follows the same validation and timestamp pattern as other modules
+
+### 10.2 Create the SubCategory Controller
+
+Create a file: `src/controllers/backend/subCategory.controller.js`
+
+```js
+const subCategory = require("../../model/subCategory");
+const category = require("../../model/category");
+
+// Helper function to get parent categories for dropdown
+exports.parentCategory = async (request, response) => {
+  const filter = { deleted_at: null, status: true };
+
+  try {
+    const result = await category
+      .find(filter)
+      .select("name")
+      .sort({ _id: "desc" });
+
+    if (result.length > 0) {
+      const data = {
+        _status: true,
+        _message: "Record fetched.",
+        _data: result,
+      };
+      return response.send(data);
+    } else {
+      const data = {
+        _status: false,
+        _message: "No Record Found",
+        _data: [],
+      };
+      return response.send(data);
+    }
+  } catch (error) {
+    const data = {
+      _status: false,
+      _message: "Something went wrong",
+      _data: [],
+    };
+    return response.send(data);
+  }
+};
+
+// Standard CRUD operations (create, view, details, update, toggleStatus, destroy)
+// Follow the same pattern as other controllers but with parent category relationship
+
+exports.create = async (request, response) => {
+  const dataSave = request.body;
+  if (request.file) {
+    dataSave.image = request.file.filename;
+  }
+  try {
+    const result = await new subCategory(dataSave).save();
+    const data = {
+      _status: true,
+      _message: "Record Inserted Successfully",
+      _data: result,
+    };
+    return response.send(data);
+  } catch (error) {
+    // Handle validation errors
+    const errorMessages = {};
+    if (error.errors) {
+      for (const e in error.errors) {
+        errorMessages[e] = error.errors[e].message;
+      }
+    } else if (error.message) {
+      errorMessages.general = error.message;
+    }
+    const data = {
+      _status: false,
+      _message: "Something went wrong",
+      _data: null,
+      _error: errorMessages,
+    };
+    return response.send(data);
+  }
+};
+
+// ... (other controller methods follow the same pattern)
+```
+
+**Key Features:**
+
+- **parentCategory Helper**: Provides parent categories for frontend dropdowns
+- **Relationship Handling**: Properly manages the parent-child relationship
+- **File Upload**: Supports image uploads like the Category module
+
+### 10.3 Create the SubCategory Routes
+
+Create a file: `src/routes/backend/subCategory.routes.js`
+
+```js
+const express = require("express");
+const {
+  parentCategory,
+  create,
+  view,
+  details,
+  update,
+  toggleStatus,
+  destroy,
+} = require("../../controllers/backend/subCategory.controller.js");
+const multer = require("multer");
+const path = require("path");
+
+const uploadDir = path.join(process.cwd(), "uploads/category");
+const upload = multer({ dest: uploadDir });
+
+const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+    );
+  },
+});
+
+const uploads = multer({ storage: storage });
+
+module.exports = (app) => {
+  router.post("/parent-category", upload.none(), parentCategory);
+  router.post("/create", uploads.single("image"), create);
+  router.post("/view", upload.none(), view);
+  router.post("/details/:id", upload.none(), details);
+  router.put("/update/:id", uploads.single("image"), update);
+  router.put("/toggle-status", upload.none(), toggleStatus);
+  router.post("/delete", upload.none(), destroy);
+
+  return app.use("/api/backend/sub-categories", router);
+};
+```
+
+**Key Features:**
+
+- **parent-category Endpoint**: Special endpoint for fetching parent categories
+- **File Upload**: Same image upload handling as Category
+- **RESTful Routes**: Follows RESTful conventions with proper HTTP methods
+
+### 10.4 Connect Routes to server.js
+
+Add this line to your `server.js` in the Backend Routes section:
+
+```js
+require("./src/routes/backend/subCategory.routes")(app);
+```
+
+### 10.5 SubCategory-Specific Features
+
+#### Parent Category Filtering
+
+The view method supports filtering by parent category:
+
+```js
+if (
+  request.body.parent_category_id != undefined &&
+  request.body.parent_category_id != ""
+) {
+  andCondition.push({
+    parent_category_id: request.body.parent_category_id,
+  });
+}
+```
+
+#### Population of Parent Data
+
+When fetching subcategories, populate the parent category details:
+
+```js
+const result = await subCategory
+  .find(filter)
+  .populate("parent_category_id", "name")
+  .select("name parent_category_id image order status")
+  .sort({ _id: "desc" })
+  .limit(limit)
+  .skip(skip);
+```
+
+#### Hierarchical Validation
+
+The unique validation ensures subcategory names are unique within each parent category, not globally unique.
+
+---
+
+## 11. Test the API
 
 Start your server:
 
@@ -1564,16 +1822,16 @@ npm start
 
 Open **Postman** (or any API testing tool) and try these:
 
-| What to test | Method | URL | Body (JSON) |
-| ------------ | ------ | --- | ----------- |
-| Create a record | POST | `http://localhost:8000/api/backend/default/create` | `{ "name": "Test", "type": "User" }` |
-| View all records | POST | `http://localhost:8000/api/backend/default/view` | (no body needed) |
-| View with pagination | POST | `http://localhost:8000/api/backend/default/view` | `{ "page": 2, "limit": 5 }` |
-| View with name filter | POST | `http://localhost:8000/api/backend/default/view` | `{ "name": "Test" }` |
-| Get one record | POST | `http://localhost:8000/api/backend/default/details/ID_HERE` | (no body needed) |
-| Update a record | PUT | `http://localhost:8000/api/backend/default/update/ID_HERE` | `{ "name": "Updated Name" }` |
-| Toggle status | PUT | `http://localhost:8000/api/backend/default/toggle-status` | `{ "id": "ID_HERE" }` or `{ "id": ["ID1", "ID2"] }` |
-| Soft delete | PUT | `http://localhost:8000/api/backend/default/delete` | `{ "id": "ID_HERE" }` or `{ "id": ["ID1", "ID2"] }` |
+| What to test          | Method | URL                                                         | Body (JSON)                                         |
+| --------------------- | ------ | ----------------------------------------------------------- | --------------------------------------------------- |
+| Create a record       | POST   | `http://localhost:8000/api/backend/default/create`          | `{ "name": "Test", "type": "User" }`                |
+| View all records      | POST   | `http://localhost:8000/api/backend/default/view`            | (no body needed)                                    |
+| View with pagination  | POST   | `http://localhost:8000/api/backend/default/view`            | `{ "page": 2, "limit": 5 }`                         |
+| View with name filter | POST   | `http://localhost:8000/api/backend/default/view`            | `{ "name": "Test" }`                                |
+| Get one record        | POST   | `http://localhost:8000/api/backend/default/details/ID_HERE` | (no body needed)                                    |
+| Update a record       | PUT    | `http://localhost:8000/api/backend/default/update/ID_HERE`  | `{ "name": "Updated Name" }`                        |
+| Toggle status         | PUT    | `http://localhost:8000/api/backend/default/toggle-status`   | `{ "id": "ID_HERE" }` or `{ "id": ["ID1", "ID2"] }` |
+| Soft delete           | PUT    | `http://localhost:8000/api/backend/default/delete`          | `{ "id": "ID_HERE" }` or `{ "id": ["ID1", "ID2"] }` |
 
 > Replace `ID_HERE` with the `_id` value you get from the create response. It looks like: `6789abc...`
 
@@ -1588,7 +1846,7 @@ Open **Postman** (or any API testing tool) and try these:
 
 ---
 
-## 11. How Dynamic Filtering Works — Category View
+## 12. How Dynamic Filtering Works — Category View
 
 The Category `view` endpoint supports **dynamic filtering** — the MongoDB query changes based on what the user searches for. This is more advanced than the Default controller's simple condition object.
 
@@ -1598,13 +1856,14 @@ The React frontend (ViewCategory.jsx) sends a POST request with:
 
 ```js
 axios.post(`${import.meta.env.VITE_SERVER_URL}api/backend/categories/view`, {
-  page: currentPage,    // which page of results
+  page: currentPage, // which page of results
   name: filterData.name, // category name to search (from text input)
-  order: filterData.order // category order number (from number input)
+  order: filterData.order, // category order number (from number input)
 });
 ```
 
 The frontend also supports **editing categories**. The AddCategory.jsx component serves both create and update modes:
+
 - **Create mode**: Route `/category/add-category` — sends `axios.post()` to `/api/backend/categories/create`
 - **Edit mode**: Route `/category/update/:id` — fetches existing data via POST to `/api/backend/categories/details/:id`, populates the form with `defaultValue`, and sends `axios.put()` to `/api/backend/categories/update/:id`
 
@@ -1630,6 +1889,7 @@ if (request.body.name != undefined && request.body.name != "") {
 ```
 
 If the user typed a name in the search box:
+
 1. `new RegExp(request.body.name, "i")` creates a **case-insensitive regular expression**.
    - `request.body.name` → the search pattern (e.g., `"elec"`)
    - `"i"` → the flag meaning **case-insensitive**
@@ -1659,12 +1919,12 @@ MongoDB's `$and` means: **ALL conditions in the array must be true** for a recor
 
 ### The final query for every scenario
 
-| User input | `andCondition` array | Final MongoDB query |
-|---|---|---|
-| No filters | `[{ deleted_at: null }]` | `{ $and: [{ deleted_at: null }] }` |
-| Name only (e.g., "elec") | `[{ deleted_at: null }, { name: /elec/i }]` | `{ $and: [{ deleted_at: null }, { name: /elec/i }] }` |
-| Order only (e.g., 5) | `[{ deleted_at: null }, { order: 5 }]` | `{ $and: [{ deleted_at: null }, { order: 5 }] }` |
-| Name + Order | `[{ deleted_at: null }, { name: /elec/i }, { order: 5 }]` | `{ $and: [{ deleted_at: null }, { name: /elec/i }, { order: 5 }] }` |
+| User input               | `andCondition` array                                      | Final MongoDB query                                                 |
+| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| No filters               | `[{ deleted_at: null }]`                                  | `{ $and: [{ deleted_at: null }] }`                                  |
+| Name only (e.g., "elec") | `[{ deleted_at: null }, { name: /elec/i }]`               | `{ $and: [{ deleted_at: null }, { name: /elec/i }] }`               |
+| Order only (e.g., 5)     | `[{ deleted_at: null }, { order: 5 }]`                    | `{ $and: [{ deleted_at: null }, { order: 5 }] }`                    |
+| Name + Order             | `[{ deleted_at: null }, { name: /elec/i }, { order: 5 }]` | `{ $and: [{ deleted_at: null }, { name: /elec/i }, { order: 5 }] }` |
 
 In every case, `deleted_at: null` is always present — soft-deleted records never show up. Additional filters are only added when the user provides them.
 
@@ -1680,25 +1940,29 @@ const result = await CategoryModel.find(filter)
 ```
 
 The **same `filter`** is used for both the total count (for pagination) and the actual results. This is important because:
+
 - If 50 categories exist but only 3 match the filter `"elec"`, `totalRecords` = 3 (not 50).
 - Pagination stays accurate — `total_pages` is based on the filtered count, not the total count.
 
 ### Why `$and` array instead of a simple condition object?
 
 The Default controller uses a simple object:
+
 ```js
 const condition = { deleted_at: null, name: request.body.name };
 ```
 
 This works for exact matches, but has limitations:
+
 - You can't conditionally add/remove fields easily.
 - You can't use RegExp values cleanly alongside other conditions.
 
 The `$and` array approach lets you **push conditions only when they exist**:
+
 ```js
-const andCondition = [{ deleted_at: null }];  // always present
-if (hasName) andCondition.push({ name: /pattern/i });  // only if user searched
-if (hasOrder) andCondition.push({ order: 5 });          // only if user filtered
+const andCondition = [{ deleted_at: null }]; // always present
+if (hasName) andCondition.push({ name: /pattern/i }); // only if user searched
+if (hasOrder) andCondition.push({ order: 5 }); // only if user filtered
 ```
 
 This pattern scales well — when you add more filters later (status, date range, etc.), you just push more conditions into the array.
@@ -1710,7 +1974,7 @@ This pattern scales well — when you add more filters later (status, date range
 
 ---
 
-## 12. Quick Reference — Common Gotchas
+## 13. Quick Reference — Common Gotchas
 
 Things that are easy to forget but will save you hours of debugging.
 
@@ -1718,14 +1982,15 @@ Things that are easy to forget but will save you hours of debugging.
 
 This is the #1 most confusing thing in this project. Here's the complete picture:
 
-| Code | What it returns | When it runs | Use for |
-| ---- | --------------- | ------------ | ------- |
-| `Date.now` | A function reference | Later, when Mongoose calls it | Schema defaults (`default: Date.now`) |
-| `new Date()` | A Date object (right now) | Immediately | Controller logic (`dataSave.updated_at = new Date()`) |
-| `Date()` | A STRING (not a Date!) | Immediately | NEVER use this |
-| `Date.now()` | A number (milliseconds) | Immediately | NEVER use as a schema default |
+| Code         | What it returns           | When it runs                  | Use for                                               |
+| ------------ | ------------------------- | ----------------------------- | ----------------------------------------------------- |
+| `Date.now`   | A function reference      | Later, when Mongoose calls it | Schema defaults (`default: Date.now`)                 |
+| `new Date()` | A Date object (right now) | Immediately                   | Controller logic (`dataSave.updated_at = new Date()`) |
+| `Date()`     | A STRING (not a Date!)    | Immediately                   | NEVER use this                                        |
+| `Date.now()` | A number (milliseconds)   | Immediately                   | NEVER use as a schema default                         |
 
 **The golden rule:**
+
 - Giving it to Mongoose to call later? → `Date.now` (no parentheses)
 - Need the value right now in your code? → `new Date()`
 
@@ -1738,12 +2003,11 @@ The model file runs ONCE at startup. If you write `default: Date()` or `default:
 ### Common Mistakes Checklist
 
 **Chaining `.sort()`, `.limit()`, `.skip()` AFTER `await` — they run on the JS array, not MongoDB:**
+
 ```js
 // WRONG — await resolves first, returns a JS array.
 // Then .sort(), .limit(), .skip() run on the array — limit/skip don't exist on arrays!
-const result = (
-  await Model.find(condition).select("name order status")
-)
+const result = (await Model.find(condition).select("name order status"))
   .sort({ _id: "desc" })
   .limit(limit)
   .skip(skip);
@@ -1757,6 +2021,7 @@ const result = await Model.find(condition)
 ```
 
 **Pagination skip calculation — how it works:**
+
 ```js
 // skip = (page - 1) * limit
 //
@@ -1771,6 +2036,7 @@ const result = await Model.find(condition)
 ```
 
 **Missing `await`:**
+
 ```js
 // WRONG — result is a Promise/Query object, not data
 const result = DefaultModel.findOne({ _id: id });
@@ -1782,6 +2048,7 @@ if (result) { ... } // Works correctly
 ```
 
 **Missing `return response.send()` in catch blocks:**
+
 ```js
 // WRONG — error happens but no response is ever sent. Request hangs forever.
 catch (error) {
@@ -1797,6 +2064,7 @@ catch (error) {
 ```
 
 **`for...in` on arrays vs objects:**
+
 ```js
 // for...in on OBJECTS — gives you the KEYS ✅
 for (const key in { name: "Sid", age: 20 }) { ... }
@@ -1812,6 +2080,7 @@ for (const item of ["apple", "banana"]) { ... }
 ```
 
 **Arrow functions don't have `this`:**
+
 ```js
 // WRONG — arrow function, "this" is undefined
 validate: {
@@ -1829,6 +2098,7 @@ validate: {
 ```
 
 **`this.constructor.findOne` breaks during `updateOne`:**
+
 ```js
 // WRONG — works during .save(), but FAILS during updateOne with runValidators: true
 // During updates, "this" is a Query object, not the document.
@@ -1848,6 +2118,7 @@ validate: {
 ```
 
 **Aggregation pipeline updates require `updatePipeline: true` in Mongoose 9+:**
+
 ```js
 // WRONG — Mongoose 9 throws:
 //   "Cannot pass an array to query updates unless the 'updatePipeline' option is set."
@@ -1864,15 +2135,21 @@ await Model.updateMany(
 ```
 
 **`updateOne` skips validators by default:**
+
 ```js
 // WRONG — validators won't run, invalid data can be saved
 await DefaultModel.updateOne({ _id: id }, { $set: data });
 
 // CORRECT — validators will run
-await DefaultModel.updateOne({ _id: id }, { $set: data }, { runValidators: true });
+await DefaultModel.updateOne(
+  { _id: id },
+  { $set: data },
+  { runValidators: true },
+);
 ```
 
 **`enum` is a validator, not a type:**
+
 ```js
 // WRONG — there is no "Enum" type in Mongoose
 type: { type: Enum, values: ["User", "Admin"] }
@@ -1882,6 +2159,7 @@ type: { type: String, enum: ["User", "Admin"] }
 ```
 
 **`enum` allows `undefined`:**
+
 ```js
 // If the field is not "required" and no value is sent, it saves as undefined.
 // The enum check only runs when a value IS provided.
@@ -1889,23 +2167,25 @@ type: { type: String, enum: ["User", "Admin"] }
 ```
 
 **`match` without a custom message gives a generic error:**
+
 ```js
 // HARD TO DEBUG — generic error message, doesn't tell you what's wrong
-match: /^[a-zA-Z 0-9]{2,10}$/
+match: /^[a-zA-Z 0-9]{2,10}$/;
 // Error: 'Path "name" is invalid (value).'
 
 // BETTER — array syntax with a custom message
-match: [/^[a-zA-Z 0-9]{2,10}$/, "Name must be 2-10 alphanumeric characters"]
+match: [/^[a-zA-Z 0-9]{2,10}$/, "Name must be 2-10 alphanumeric characters"];
 // Error: 'Name must be 2-10 alphanumeric characters'
 ```
 
 **`validate.message` props — use it or lose it:**
+
 ```js
 // WASTEFUL — props is available but ignored
-message: (props) => `The specified name is already in use.`
+message: (props) => `The specified name is already in use.`;
 
 // USEFUL — props gives you the value and field name
-message: (props) => `${props.value} is already in use for ${props.path} field.`
+message: (props) => `${props.value} is already in use for ${props.path} field.`;
 // If "Sofa" already exists: "Sofa is already in use for name field."
 
 // Available props:
@@ -1915,17 +2195,19 @@ message: (props) => `${props.value} is already in use for ${props.path} field.`
 ```
 
 **`express.json()` cannot parse `multipart/form-data`:**
+
 ```js
 // If the frontend sends form-data (for file uploads),
 // express.json() and express.urlencoded() CANNOT read it.
 // request.body will be empty — your data just vanishes silently.
 //
 // You MUST use multer middleware:
-router.post("/create", uploads.single("image"), create);  // file + form fields
-router.post("/view", upload.none(), view);                 // form fields only, no file
+router.post("/create", uploads.single("image"), create); // file + form fields
+router.post("/view", upload.none(), view); // form fields only, no file
 ```
 
 **Multer v2 requires absolute paths:**
+
 ```js
 // WRONG — multer v2 throws: "Base path '' must be an absolute path"
 const upload = multer({ dest: "uploads/category" });
@@ -1940,6 +2222,7 @@ const upload = multer({ dest: uploadDir });
 ```
 
 **`require()` runs at startup, not on request:**
+
 ```js
 // This line in server.js does NOT wait for a request to load the files.
 require("./src/routes/backend/default.routes")(app);

@@ -16,6 +16,7 @@ require("./src/routes/backend/default.routes")(app);
 require("./src/routes/backend/category.routes")(app);
 require("./src/routes/backend/colour.routes")(app);
 require("./src/routes/backend/material.routes")(app);
+require("./src/routes/backend/subCategory.routes")(app);
 
 // Application Routes
 
