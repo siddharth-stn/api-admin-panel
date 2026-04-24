@@ -1533,9 +1533,9 @@ require("./src/routes/backend/category.routes")(app);  // ← new line
 | Filter by order | POST | `http://localhost:8000/api/backend/categories/view` | `order: 5` (exact match) |
 | Filter by both | POST | `http://localhost:8000/api/backend/categories/view` | `name: "elec"`, `order: 5` |
 | Get one category | POST | `http://localhost:8000/api/backend/categories/details/ID_HERE` | (no body needed) |
-| Update a category | PUT | `http://localhost:8000/api/backend/categories/update/ID_HERE` | `name: "Chair"`, `image: [file]` |
-| Toggle status | PUT | `http://localhost:8000/api/backend/categories/toggle-status` | `id: "ID_HERE"` |
-| Soft delete | DELETE | `http://localhost:8000/api/backend/categories/delete` | `id: "ID_HERE"` |
+| Update a category | PUT | `http://localhost:8000/api/backend/categories/update/ID_HERE` | `name: "Chair"`, `image: [file]` (only changed fields needed — `$set` preserves existing data) |
+| Toggle status | PUT | `http://localhost:8000/api/backend/categories/toggle-status` | `id: "ID_HERE"` or `id: ["ID1", "ID2"]` |
+| Soft delete | DELETE | `http://localhost:8000/api/backend/categories/delete` | `id: "ID_HERE"` or `id: ["ID1", "ID2"]` |
 
 > In Postman, for the `image` field, change the type dropdown from "Text" to "File" — then you can select a file from your computer.
 
@@ -1594,12 +1594,16 @@ The Category `view` endpoint supports **dynamic filtering** — the MongoDB quer
 The React frontend (ViewCategory.jsx) sends a POST request with:
 
 ```js
-axios.post("http://localhost:8000/api/backend/categories/view", {
+axios.post(`${import.meta.env.VITE_SERVER_URL}api/backend/categories/view`, {
   page: currentPage,    // which page of results
   name: filterData.name, // category name to search (from text input)
   order: filterData.order // category order number (from number input)
 });
 ```
+
+The frontend also supports **editing categories**. The AddCategory.jsx component serves both create and update modes:
+- **Create mode**: Route `/category/add-category` — sends `axios.post()` to `/api/backend/categories/create`
+- **Edit mode**: Route `/category/update/:id` — fetches existing data via POST to `/api/backend/categories/details/:id`, populates the form with `defaultValue`, and sends `axios.put()` to `/api/backend/categories/update/:id`
 
 ### Step-by-step: how the filter is built
 
