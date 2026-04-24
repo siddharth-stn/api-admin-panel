@@ -126,6 +126,8 @@ app.use("/uploads", express.static("uploads"));
 // Backend Routes
 require("./src/routes/backend/default.routes")(app);
 require("./src/routes/backend/category.routes")(app);
+require("./src/routes/backend/colour.routes")(app);
+require("./src/routes/backend/material.routes")(app);
 
 // Application Routes
 
@@ -898,8 +900,9 @@ For every new feature, just add another line:
 ```js
 // Backend Routes
 require("./src/routes/backend/default.routes")(app);
-require("./src/routes/backend/user.routes")(app);
-require("./src/routes/backend/product.routes")(app);
+require("./src/routes/backend/category.routes")(app);
+require("./src/routes/backend/colour.routes")(app);
+require("./src/routes/backend/material.routes")(app);
 
 // Website Routes
 require("./src/routes/website/home.routes")(app);

@@ -41,7 +41,7 @@ module.exports = (app) => {
 
   router.put("/toggle-status", upload.none(), toggleStatus);
 
-  router.delete("/delete", upload.none(), destroy);
+  router.post("/delete", upload.none(), destroy);
 
   return app.use("/api/backend/categories", router);
 };
