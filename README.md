@@ -1846,7 +1846,206 @@ Open **Postman** (or any API testing tool) and try these:
 
 ---
 
-## 12. How Dynamic Filtering Works — Category View
+## 12. Sub Sub Category Module
+
+### Overview
+
+The Sub Sub Category module provides three-level hierarchical categorization: Parent Category → Sub Category → Sub Sub Category. This follows the same architectural patterns as the Category and Sub Category modules.
+
+### Model Schema
+
+```javascript
+// src/model/subSubCategory.js
+const schema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Name is required!"],
+    match: [
+      /^[a-zA-Z 0-9]{2,10}$/,
+      "Name must be an Alphanumeric value of 2 to 10 characters",
+    ],
+    validate: {
+      validator: async function (v) {
+        const user = await mongoose.model("sub_sub_categories").findOne({
+          name: v,
+          parent_category_id: this.parent_category_id,
+          sub_category_id: this.sub_category_id,
+          deleted_at: null,
+        });
+        return !user;
+      },
+      message: (props) =>
+        `${props.value} is already in use for ${props.path} field.`,
+    },
+  },
+  image: {
+    type: String,
+    default: "",
+  },
+  parent_category_id: {
+    type: String,
+    required: [true, "Parent Category is required!"],
+    ref: "categories",
+  },
+  sub_category_id: {
+    type: String,
+    required: [true, "Sub Category is required!"],
+    ref: "sub_categories",
+  },
+  status: {
+    type: Boolean,
+    default: true,
+  },
+  order: {
+    type: Number,
+    default: 2,
+    min: [0, "Can't be less than zero"],
+    max: [1000, "Maximum 1000 quantity allowed"],
+  },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: null },
+  deleted_at: { type: Date, default: null },
+});
+```
+
+### Key Features
+
+- **Hierarchical Relationships**: References both parent category and sub category
+- **Unique Validation**: Names are unique within each parent+sub category combination
+- **Soft Delete**: Uses `deleted_at` field for soft deletion
+- **Image Upload**: Supports category images with file storage
+- **Status Toggle**: Enable/disable sub sub categories
+- **Order Management**: Custom ordering within hierarchy
+
+### API Endpoints
+
+| Endpoint                                          | Method | Description                             | Request Body                                                                 |
+| ------------------------------------------------- | ------ | --------------------------------------- | ---------------------------------------------------------------------------- |
+| `/api/backend/sub-sub-categories/parent-category` | POST   | Get parent categories for dropdown      | `{}`                                                                         |
+| `/api/backend/sub-sub-categories/sub-category`    | POST   | Get sub categories for dropdown         | `{ "parent_category_id": "ID" }`                                             |
+| `/api/backend/sub-sub-categories/create`          | POST   | Create new sub sub category             | FormData (with image)                                                        |
+| `/api/backend/sub-sub-categories/view`            | POST   | View sub sub categories with pagination | `{ "page": 1, "name": "", "parent_category_id": "", "sub_category_id": "" }` |
+| `/api/backend/sub-sub-categories/details/:id`     | POST   | Get sub sub category details            | `{}`                                                                         |
+| `/api/backend/sub-sub-categories/update/:id`      | PUT    | Update sub sub category                 | FormData (with optional image)                                               |
+| `/api/backend/sub-sub-categories/toggle-status`   | PUT    | Toggle status (active/inactive)         | `{ "id": "ID" }` or `{ "id": ["ID1", "ID2"] }`                               |
+| `/api/backend/sub-sub-categories/delete`          | POST   | Soft delete sub sub category            | `{ "id": "ID" }` or `{ "id": ["ID1", "ID2"] }`                               |
+
+### Usage Examples
+
+#### Create Sub Sub Category
+
+```javascript
+const formData = new FormData();
+formData.append("parent_category_id", "parent_id_here");
+formData.append("sub_category_id", "sub_id_here");
+formData.append("name", "Electronics");
+formData.append("order", "1");
+formData.append("image", fileObject); // Optional
+
+const response = await axios.post(
+  "/api/backend/sub-sub-categories/create",
+  formData,
+  {
+    headers: { "Content-Type": "multipart/form-data" },
+  },
+);
+```
+
+#### View with Filtering
+
+```javascript
+const filterData = {
+  page: 1,
+  name: "Electronics",
+  parent_category_id: "parent_id_here",
+  sub_category_id: "sub_id_here",
+};
+
+const response = await axios.post(
+  "/api/backend/sub-sub-categories/view",
+  filterData,
+);
+```
+
+#### Helper Endpoints for Dropdowns
+
+```javascript
+// Get parent categories
+const parents = await axios.post(
+  "/api/backend/sub-sub-categories/parent-category",
+);
+
+// Get sub categories for a specific parent
+const subCategories = await axios.post(
+  "/api/backend/sub-sub-categories/sub-category",
+  {
+    parent_category_id: "parent_id_here",
+  },
+);
+```
+
+### Response Format
+
+All endpoints return consistent responses:
+
+```javascript
+// Success
+{
+  _status: true,
+  _message: "Record created successfully",
+  _data: { /* sub sub category object */ }
+}
+
+// Success with pagination
+{
+  _status: true,
+  _message: "Record fetched.",
+  _paginate: {
+    total_records: 25,
+    current_page: 1,
+    total_pages: 3
+  },
+  _data: [ /* array of sub sub categories */ ]
+}
+
+// Error
+{
+  _status: false,
+  _message: "Validation error",
+  _error: { name: "Name is required" }
+}
+```
+
+### File Upload Configuration
+
+```javascript
+// Multer configuration for image uploads
+const uploadDir = path.join(process.cwd(), "uploads/category");
+const uploads = multer({ storage: storage });
+
+router.post("/create", uploads.single("image"), create);
+router.put("/update/:id", uploads.single("image"), update);
+```
+
+### Database Relationships
+
+The sub sub category model establishes these relationships:
+
+- **parent_category_id** → References `categories` collection
+- **sub_category_id** → References `sub_categories` collection
+- **Populated in responses** for better frontend integration
+
+### Validation Rules
+
+- Name: Required, alphanumeric, 2-10 characters
+- Parent Category: Required, must exist in categories collection
+- Sub Category: Required, must exist in sub_categories collection
+- Order: Number, 0-1000 range
+- Unique: Name must be unique within parent+sub category combination
+
+---
+
+## 13. How Dynamic Filtering Works — Category View
 
 The Category `view` endpoint supports **dynamic filtering** — the MongoDB query changes based on what the user searches for. This is more advanced than the Default controller's simple condition object.
 
