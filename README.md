@@ -17,9 +17,12 @@ Think of this like a recipe — you don't need to memorize it. Just follow along
 7. [Create the Routes](#7-create-the-routes)
 8. [Connect Routes to server.js](#8-connect-routes-to-serverjs)
 9. [Adding a Second Module — Category](#9-adding-a-second-module--category)
-10. [Test the API](#10-test-the-api)
-11. [How Dynamic Filtering Works — Category View](#11-how-dynamic-filtering-works--category-view)
-12. [Quick Reference — Common Gotchas](#12-quick-reference--common-gotchas)
+10. [Adding a SubCategory Module](#10-adding-a-subcategory-module)
+11. [Test the API](#11-test-the-api)
+12. [Sub Sub Category Module](#12-sub-sub-category-module)
+13. [Product Module (Multi-File Uploads, Slugs, Population)](#13-product-module-with-multi-file-uploads-slug-generation-and-population)
+14. [How Dynamic Filtering Works — Category View](#14-how-dynamic-filtering-works--category-view)
+15. [Quick Reference — Common Gotchas](#15-quick-reference--common-gotchas)
 
 ---
 
@@ -2045,7 +2048,289 @@ The sub sub category model establishes these relationships:
 
 ---
 
-## 13. How Dynamic Filtering Works — Category View
+## 13. Product Module (with Multi-File Uploads, Slug Generation, and Population)
+
+The Product module is the most advanced module in the project. It introduces several new concepts:
+
+1. **Multi-file uploads** — single image + up to 12 gallery images using `multer.fields()`
+2. **Slug generation** — auto-generated URL-friendly slugs using `slugify`
+3. **Population** — fetching related data (category names, color names, etc.) from referenced collections
+4. **Multiple reference fields** — products link to categories, sub-categories, sub-sub-categories, colors, and materials
+5. **Helper endpoints** — dedicated endpoints for populating frontend dropdowns
+
+### 13.1 Create the Product Model — `src/model/product.js`
+
+```js
+const mongoose = require("mongoose");
+
+const schema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Name is required!"],
+    match: [
+      /^[a-zA-Z 0-9]{2,10}$/,
+      "Name must be an Alphanumeric value of 2 to 10 characters",
+    ],
+  },
+  slug: {
+    type: String,
+    required: [true, "Slug is required!"],
+  },
+  product_type: {
+    type: Number, // 1 - Featured, 2 - On Sale, 3 - New Arrivals
+    required: [true, "Product Type is required!"],
+  },
+  best_selling: {
+    type: Number, // 1 - Yes, 2 - No
+    required: [true, "Best Selling is required!"],
+  },
+  image: {
+    type: String,
+    default: "",
+  },
+  images: {
+    type: Array,
+    default: "",
+  },
+  actual_price: {
+    type: Number,
+    required: [true, "Actual Price is required!"],
+  },
+  sale_price: {
+    type: Number,
+    required: [true, "Sale Price is required!"],
+  },
+  parent_category_id: {
+    type: String,
+    required: [true, "Parent Category is required!"],
+    ref: "categories",
+  },
+  sub_category_id: {
+    type: String,
+    required: [true, "Sub Category is required!"],
+    ref: "sub_categories",
+  },
+  sub_sub_category_id: {
+    type: String,
+    required: [true, "Sub Sub Category is required!"],
+    ref: "sub_sub_categories",
+  },
+  short_description: {
+    type: String,
+    required: [true, "Short Description is required!"],
+  },
+  long_description: {
+    type: String,
+    required: [true, "Long Description is required!"],
+  },
+  code: {
+    type: String,
+    required: [true, "Code is required!"],
+  },
+  dimension: {
+    type: String,
+    required: [true, "Dimension is required!"],
+  },
+  estimated_delivery: {
+    type: String,
+    required: [true, "Estimated Delivery is required!"],
+  },
+  color_ids: {
+    type: Array,
+    required: [true, "Color is required!"],
+    ref: "colours",
+  },
+  material_ids: {
+    type: Array,
+    required: [true, "Material is required!"],
+    ref: "materials",
+  },
+  status: {
+    type: Boolean,
+    default: true,
+  },
+  order: {
+    type: Number,
+    default: 2,
+    min: [0, "Can't be less than zero"],
+    max: [1000, "Maximum 1000 quantity allowed"],
+  },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: null },
+  deleted_at: { type: Date, default: null },
+});
+
+const productModel = mongoose.model("products", schema);
+
+module.exports = productModel;
+```
+
+**What's new in this model:**
+
+| Feature | Details |
+|---------|---------|
+| `slug` | Auto-generated from `name` using `slugify` in the controller |
+| `product_type` | Number enum: 1=Featured, 2=On Sale, 3=New Arrivals |
+| `best_selling` | Number enum: 1=Yes, 2=No |
+| `image` | Single main image filename (String) |
+| `images` | Array of gallery image filenames (up to 12) |
+| `color_ids` | Array of ObjectId references to `colours` collection |
+| `material_ids` | Array of ObjectId references to `materials` collection |
+| Three category refs | `parent_category_id`, `sub_category_id`, `sub_sub_category_id` |
+| Extra text fields | `short_description`, `long_description`, `code`, `dimension`, `estimated_delivery` |
+
+**Important — `ref` must match the model name exactly:**
+
+The `color_ids` field has `ref: "colours"` because the Color model registers as `mongoose.model("colours", schema)`. If you write `ref: "colors"` (American spelling), Mongoose throws: `Schema hasn't been registered for model "colors"`. The `ref` value must match the first argument of `mongoose.model()` in the referenced model file.
+
+### 13.2 Product Controller Highlights
+
+The product controller (`src/controllers/backend/product.controller.js`) introduces these new patterns:
+
+#### Slug Generation
+
+```js
+const slugify = require("slugify");
+
+const generateUniqueSlug = async (model, baseSlug) => {
+  let slug = baseSlug;
+  let count = 0;
+  while (await model.findOne({ slug })) {
+    count++;
+    slug = `${baseSlug}-${count}`;
+  }
+  return slug;
+};
+
+// In create:
+if (request.body && request.body.name) {
+  let slug = slugify(request.body.name, { lower: true, strict: true });
+  dataSave.slug = await generateUniqueSlug(product, slug);
+}
+```
+
+- `slugify("Modern Sofa", { lower: true, strict: true })` → `"modern-sofa"`
+- If `"modern-sofa"` already exists, it tries `"modern-sofa-1"`, `"modern-sofa-2"`, etc.
+
+#### Multi-File Upload Handling
+
+```js
+// In create:
+if (request.files.image != undefined) {
+  dataSave.image = request.files.image.filename;
+}
+
+let images = [];
+if (request.files.images != undefined) {
+  request.files.images.forEach((image) => {
+    images.push(image.filename);
+  });
+}
+dataSave.images = images;
+```
+
+When using `multer.fields()`, uploaded files are in `request.files` (plural), not `request.file` (singular). Each field name becomes a key: `request.files.image` (array of 1) and `request.files.images` (array of up to 12).
+
+#### Population in View/Details
+
+```js
+const result = await product
+  .find(filter)
+  .populate("parent_category_id", "name")
+  .populate("sub_category_id", "name")
+  .populate("sub_sub_category_id", "name")
+  .populate("material_ids", "name")
+  .populate("color_ids", "name")
+  .sort({ _id: "desc" })
+  .limit(limit)
+  .skip(skip);
+```
+
+**Important:** `.populate()` must come AFTER `.find()`, not before it. Calling `product.populate(...).find(...)` throws an error in Mongoose 9. The correct order is `product.find(...).populate(...)`.
+
+#### Helper Endpoints for Dropdowns
+
+The product controller includes 5 helper endpoints that return data for frontend dropdowns:
+
+| Endpoint | Returns | Used for |
+|----------|---------|----------|
+| `parentCategory` | All active categories (name only) | Parent category dropdown |
+| `subCategory` | Sub-categories filtered by `parent_category_id` | Sub-category dropdown |
+| `subSubCategory` | Sub-sub-categories filtered by `sub_category_id` | Sub-sub-category dropdown |
+| `material` | All active materials (name only) | Materials multi-select |
+| `color` | All active colors (name only) | Colors multi-select |
+
+### 13.3 Product Routes — `src/routes/backend/product.routes.js`
+
+```js
+const uploads = multer({ storage: storage });
+
+module.exports = (app) => {
+  const uploadMiddleware = uploads.fields([
+    { name: "image", maxCount: 1 },
+    { name: "images", maxCount: 12 },
+  ]);
+
+  router.post("/parent-category", upload.none(), parentCategory);
+  router.post("/sub-category", upload.none(), subCategory);
+  router.post("/sub-sub-category", upload.none(), subSubCategory);
+  router.post("/material", upload.none(), material);
+  router.post("/color", upload.none(), color);
+
+  router.post("/create", uploadMiddleware, create);
+  router.post("/view", upload.none(), view);
+  router.post("/details/:id", uploadMiddleware, details);
+  router.put("/update/:id", uploads.single("image"), update);
+  router.put("/toggle-status", upload.none(), toggleStatus);
+  router.post("/delete", upload.none(), destroy);
+
+  return app.use("/api/backend/products", router);
+};
+```
+
+**Key difference — `uploads.fields()` vs `uploads.single()`:**
+
+| Method | What it does | `request` property |
+|--------|--------------|-------------------|
+| `uploads.single("image")` | Accepts ONE file from the "image" field | `request.file` (singular) |
+| `uploads.fields([...])` | Accepts files from MULTIPLE named fields | `request.files` (plural, object with field names as keys) |
+| `upload.none()` | Parses form fields only, rejects files | `request.body` only |
+
+### 13.4 Product API Endpoints Summary
+
+| Endpoint | Method | Description | Middleware |
+|----------|--------|-------------|-----------|
+| `/api/backend/products/parent-category` | POST | Get parent categories for dropdown | `upload.none()` |
+| `/api/backend/products/sub-category` | POST | Get sub categories (filtered by parent) | `upload.none()` |
+| `/api/backend/products/sub-sub-category` | POST | Get sub-sub categories (filtered by sub) | `upload.none()` |
+| `/api/backend/products/material` | POST | Get all active materials | `upload.none()` |
+| `/api/backend/products/color` | POST | Get all active colors | `upload.none()` |
+| `/api/backend/products/create` | POST | Create a new product | `uploads.fields()` |
+| `/api/backend/products/view` | POST | List products with pagination & filters | `upload.none()` |
+| `/api/backend/products/details/:id` | POST | Get single product with populated refs | `uploads.fields()` |
+| `/api/backend/products/update/:id` | PUT | Update a product | `uploads.single("image")` |
+| `/api/backend/products/toggle-status` | PUT | Toggle product status | `upload.none()` |
+| `/api/backend/products/delete` | POST | Soft delete product(s) | `upload.none()` |
+
+### 13.5 Test Product Endpoints
+
+| What to test | Method | URL | Body |
+|---|---|---|---|
+| Get parent categories | POST | `/api/backend/products/parent-category` | (none) |
+| Get sub categories | POST | `/api/backend/products/sub-category` | `parent_category_id: "ID"` |
+| Get sub-sub categories | POST | `/api/backend/products/sub-sub-category` | `sub_category_id: "ID"` |
+| Get materials | POST | `/api/backend/products/material` | (none) |
+| Get colors | POST | `/api/backend/products/color` | (none) |
+| Create product | POST | `/api/backend/products/create` | FormData: all fields + `image` file + `images` files |
+| View products | POST | `/api/backend/products/view` | `{ "page": 1, "name": "", "parent_category_id": "" }` |
+| Get product details | POST | `/api/backend/products/details/ID` | (none) |
+| Update product | PUT | `/api/backend/products/update/ID` | FormData with changed fields |
+| Toggle status | PUT | `/api/backend/products/toggle-status` | `{ "id": "ID" }` or `{ "id": ["ID1", "ID2"] }` |
+| Soft delete | POST | `/api/backend/products/delete` | `{ "id": "ID" }` or `{ "id": ["ID1", "ID2"] }` |
+
+---
+
+## 14. How Dynamic Filtering Works — Category View
 
 The Category `view` endpoint supports **dynamic filtering** — the MongoDB query changes based on what the user searches for. This is more advanced than the Default controller's simple condition object.
 
@@ -2173,7 +2458,7 @@ This pattern scales well — when you add more filters later (status, date range
 
 ---
 
-## 13. Quick Reference — Common Gotchas
+## 15. Quick Reference — Common Gotchas
 
 Things that are easy to forget but will save you hours of debugging.
 

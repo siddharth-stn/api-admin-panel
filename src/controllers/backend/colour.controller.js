@@ -1,4 +1,4 @@
-const ColourModel = require("../../model/colour");
+const ColourModel = require("../../model/color");
 
 exports.create = async (request, response) => {
   const dataSave = request.body;
